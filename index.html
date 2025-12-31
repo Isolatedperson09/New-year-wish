@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 Warp Speed</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* The Flash Effect Overlay */
+        #flash-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+            transition: opacity 2s ease-out;
+        }
+
+        /* The UI */
+        #ui {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            width: 100%;
+            pointer-events: none;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: clamp(3rem, 8vw, 6rem); /* Responsive font */
+            text-transform: uppercase;
+            letter-spacing: 0.5rem;
+            margin: 0;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.6); /* Gold Glow */
+            line-height: 1.1;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 800;
+        }
+
+        /* Tech-style Countdown */
+        #timer {
+            font-size: clamp(1.5rem, 4vw, 3rem);
+            color: #00d2ff; /* Cyan tech color */
+            font-weight: bold;
+            letter-spacing: 4px;
+            margin: 30px 0;
+            text-shadow: 0 0 20px rgba(0, 210, 255, 0.8);
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        #start-btn {
+            pointer-events: auto;
+            margin-top: 20px;
+            padding: 15px 50px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #d4af37; /* Gold */
+            border: 2px solid #d4af37;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border-radius: 50px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy transition */
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+
+        #start-btn:hover {
+            background: #d4af37;
+            color: #000;
+            box-shadow: 0 0 40px #d4af37, inset 0 0 10px white;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="flash-overlay"></div>
+
+    <div id="ui">
+        <h1 id="title-text">Welcome to<br>2026</h1>
+        
+        <div id="timer">00:00:00:00</div>
+
+        <button id="start-btn">Launch 2026</button>
+    </div>
+
+    <audio id="music" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+
+    <script type="module">
+        import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+
+        // --- 1. COUNTDOWN ---
+        const timerElement = document.getElementById('timer');
+        const targetDate = new Date("January 1, 2026 00:00:00").getTime();
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            if (distance < 0) {
+                timerElement.innerHTML = "HAPPY NEW YEAR!";
+                timerElement.style.color = "#FFD700"; // Turn Gold
+                return;
+            }
+
+            const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+            timerElement.innerHTML = 
+                `${d} : ${h.toString().padStart(2, '0')} : ${m.toString().padStart(2, '0')} : ${s.toString().padStart(2, '0')}`;
+        }
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        // --- 2. THREE.JS SETUP ---
+        const scene = new THREE.Scene();
+        // Deep black fog for endless depth
+        scene.fog = new THREE.FogExp2(0x000000, 0.0015);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 3000);
+        camera.position.z = 1000; // Start further back
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // --- 3. CREATE STARS (BACKGROUND) ---
+        // This adds depth behind the text
+        const starGeometry = new THREE.BufferGeometry();
+        const starVertices = [];
+        for (let i = 0; i < 2000; i++) {
+            const x = (Math.random() - 0.5) * 4000;
+            const y = (Math.random() - 0.5) * 4000;
+            const z = (Math.random() - 0.5) * 4000;
+            starVertices.push(x, y, z);
+        }
+        starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+        const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 2, transparent: true, opacity: 0.8 });
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        scene.add(stars);
+
+        // --- 4. TEXT & HEART GENERATION ---
+        const messages = [
+            "Happy New Year", "2026", "Make a Wish", "Fresh Start", 
+            "Limitless", "Courage", "Love", "Family", 
+            "Success", "Adventure", "Health", "Prosperity"
+        ];
+
+        function createTexture(text, isHeart = false) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const fontSize = isHeart ? 100 : 50;
+            const font = `900 ${fontSize}px Arial`; // Bold font
+            
+            ctx.font = font;
+            const width = ctx.measureText(text).width + 20;
+            const height = fontSize * 1.5;
+            
+            canvas.width = width;
+            canvas.height = height;
+
+            // Glow Effect
+            ctx.shadowColor = isHeart ? "#ff0055" : "#00d2ff"; // Pink for hearts, Cyan for text
+            ctx.shadowBlur = 20;
+            
+            ctx.fillStyle = isHeart ? "#ff3366" : "white";
+            ctx.font = font;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(text, width / 2, height / 2);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            return texture;
+        }
+
+        const group = new THREE.Group();
+        scene.add(group);
+
+        const particles = [];
+        
+        // Create 200 objects
+        for (let i = 0; i < 200; i++) {
+            const isHeart = Math.random() > 0.7; // 30% chance of being a heart
+            const text = isHeart ? "❤" : messages[Math.floor(Math.random() * messages.length)];
+            
+            const map = createTexture(text, isHeart);
+            const material = new THREE.SpriteMaterial({ 
+                map: map, 
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending, // Makes them glow against each other
+                depthWrite: false
+            });
+
+            const sprite = new THREE.Sprite(material);
+            
+            // Random spread
+            sprite.position.x = (Math.random() - 0.5) * 1500;
+            sprite.position.y = (Math.random() - 0.5) * 1500;
+            sprite.position.z = (Math.random() - 0.5) * 3000;
+            
+            // Random Scale
+            const scale = isHeart ? Math.random() * 40 + 40 : Math.random() * 80 + 40;
+            sprite.scale.set(map.image.width / map.image.height * scale, scale, 1);
+
+            group.add(sprite);
+            particles.push(sprite);
+        }
+
+        // --- 5. ANIMATION VARIABLES ---
+        let currentSpeed = 0.5; // Slow drift initially
+        let targetSpeed = 0.5;
+        let rotationSpeed = 0.001;
+        let isRunning = false;
+
+        // --- 6. ANIMATION LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Smoothly interpolate speed (Acceleration/Deceleration logic)
+            currentSpeed += (targetSpeed - currentSpeed) * 0.03;
+
+            // Move Particles
+            particles.forEach(p => {
+                p.position.z += currentSpeed;
+
+                // Loop logic: If it goes behind camera, reset far ahead
+                if (p.position.z > camera.position.z) {
+                    p.position.z -= 3000; 
+                    p.position.x = (Math.random() - 0.5) * 1500;
+                    p.position.y = (Math.random() - 0.5) * 1500;
+                }
+            });
+
+            // Move Stars (Background layer moves slower for parallax)
+            stars.rotation.z += rotationSpeed * 0.2;
+
+            // Camera Rotation (Spiral effect)
+            if (isRunning) {
+                camera.rotation.z += rotationSpeed; 
+                // Gentle sway
+                camera.position.x = Math.sin(Date.now() * 0.001) * 50;
+                camera.position.y = Math.cos(Date.now() * 0.001) * 50;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // --- 7. THE "WARP SPEED" INTERACTION ---
+        const btn = document.getElementById('start-btn');
+        const audio = document.getElementById('music');
+        const flash = document.getElementById('flash-overlay');
+        const title = document.getElementById('title-text');
+
+        btn.addEventListener('click', () => {
+            // 1. Start Audio
+            audio.play().catch(e => console.log("Audio blocked"));
+            
+            // 2. Hide Button
+            btn.style.transform = "scale(0)";
+            btn.style.opacity = "0";
+            
+            // 3. Trigger Flash
+            flash.style.opacity = "1"; // White out
+            
+            // 4. Set State
+            isRunning = true;
+
+            // 5. WARP SPEED LOGIC
+            // Instantly go very fast
+            targetSpeed = 50; 
+            rotationSpeed = 0.02; // Spin faster
+
+            // 6. After Flash fades, slow down to "Cruising Speed"
+            setTimeout(() => {
+                flash.style.transition = "opacity 3s ease-in";
+                flash.style.opacity = "0"; // Fade in to the tunnel
+                
+                // Slow down smoothly after 2 seconds
+                setTimeout(() => {
+                    targetSpeed = 8; // Cruising speed
+                    rotationSpeed = 0.002; // Gentle rotation
+                }, 1000);
+                
+            }, 100);
+        });
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+</body>
+</html>
